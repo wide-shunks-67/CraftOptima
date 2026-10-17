@@ -1,0 +1,11 @@
+backend/venv/
+backend/.env
+__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
+Thumbs.db
+*.egg-info/
+dist/
+build/
+.env.local

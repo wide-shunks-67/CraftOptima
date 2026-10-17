@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CraftOptima — AI Listing Optimizer for Artisan Side-Hustles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+
+    .glass {
+      background: rgba(15, 20, 35, 0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .grad-border {
+      position: relative;
+    }
+    .grad-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(52,211,153,.5), rgba(251,191,36,.3), rgba(99,102,241,.2));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .tag-chip:active { transform: scale(0.94); }
+
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    .spin-slow { animation: spin-slow 1.4s linear infinite; }
+
+    .result-section { animation: fadeUp .35s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-[#080c16] text-slate-100 min-h-screen font-sans antialiased">
+
+<!-- ─── NAV ─────────────────────────────────────────── -->
+<header class="sticky top-0 z-50 border-b border-slate-800/70 bg-[#080c16]/80 backdrop-blur-md">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2.5 shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <div class="leading-none">
+        <span class="text-[17px] font-extrabold tracking-tight">Craft<span class="text-emerald-400">Optima</span></span>
+        <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Side-Hustle AI for Etsy · eBay · Shopify</div>
+      </div>
+    </a>
+
+    <!-- Right actions -->
+    <div class="flex items-center gap-3">
+      <button onclick="scrollToCatalog()" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 transition text-slate-300">
+        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+        Catalog (<span id="nav-count">0</span>)
+      </button>
+      <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Gemma&nbsp;4&nbsp;Live
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="max-w-3xl mx-auto text-center px-4 pt-14 pb-10">
+  <div class="inline-flex items-center gap-2 text-[11px] px-3 py-1 rounded-full border border-slate-700 bg-slate-800/60 text-slate-300 mb-5">
+    <span class="text-amber-400 font-semibold">⚡ Hacktoberfest 2026 · Week 2 · Side Hustle</span>
+    <span class="text-slate-600">|</span>
+    <span class="text-emerald-400">Open-Weight · Zero Token Tax · Merchant Privacy First</span>
+  </div>
+  <h1 class="text-3xl sm:text-[2.75rem] font-extrabold tracking-tight leading-tight text-white">
+    Turn Handmade Craft Notes into<br>
+    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400">
+      High-Converting Marketplace Listings
+    </span>
+  </h1>
+  <p class="mt-4 text-slate-400 text-base max-w-2xl mx-auto">
+    CraftOptima uses Google's open-weight <strong class="text-slate-200">Gemma 4</strong> to produce
+    rank-optimised titles, exactly 13 search tags, 3-tier psychological pricing, artisan copy,
+    and an ElevenLabs audio pitch — all without sharing your trade secrets with a corporate API.
+  </p>
+</section>
+
+<!-- ─── MAIN WORKSPACE ───────────────────────────────── -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+    <!-- ── LEFT: Input Form ───────────────────────── -->
+    <aside class="lg:col-span-5">
+      <div class="glass rounded-2xl p-6 shadow-2xl grad-border">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Product Details
+          </h2>
+          <span class="text-[11px] font-mono text-slate-500">Step 1 · Input</span>
+        </div>
+
+        <form id="gen-form" onsubmit="event.preventDefault(); runOptimize();" class="space-y-4">
+
+          <!-- Platform selector -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-2">Target Marketplace</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer"><input type="radio" name="platform" value="Etsy" checked class="peer sr-only">
+                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🧡 Etsy</div>
+              </label>
+              <label class="cursor-pointer"><input type="radio" name="platform" value="eBay" class="peer sr-only">
+                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🏷️ eBay</div>
+              </label>
+              <label class="cursor-pointer"><input type="radio" name="platform" value="Shopify" class="peer sr-only">
+                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🛍️ Shopify</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Product name -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-name">Product Title / Raw Concept <span class="text-red-400">*</span></label>
+            <input id="f-name" type="text" required
+              placeholder="e.g. Handmade Speckled Ceramic Matcha Bowl with Bamboo Whisk"
+              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+          </div>
+
+          <!-- Materials + Price -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-materials">Materials / Craft Method</label>
+              <input id="f-materials" type="text"
+                placeholder="e.g. Stoneware clay, food-safe glaze"
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-price">Base Cost / Est. Price ($)</label>
+              <input id="f-price" type="number" step="0.5" min="0"
+                placeholder="e.g. 18.00"
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+          </div>
+
+          <!-- Audience -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-audience">Target Buyer Persona</label>
+            <input id="f-audience" type="text"
+              placeholder="e.g. Mindful gifters, tea ceremony enthusiasts"
+              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+          </div>
+
+          <!-- Features -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-features">Unique Features / Dimensions</label>
+            <textarea id="f-features" rows="3"
+              placeholder="e.g. Wheel-thrown individually; speckled cream satin glaze; 14oz capacity; includes authentic 100-prong bamboo chasen whisk; microwave & dishwasher safe."
+              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition resize-none"></textarea>
+          </div>
+
+          <!-- CTA -->
+          <button type="submit" id="gen-btn"
+            class="w-full py-3 rounded-xl font-bold text-sm text-black bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 hover:opacity-90 active:scale-[0.98] shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+            <svg id="gen-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span id="gen-label">Optimize with Gemma 4</span>
+          </button>
+        </form>
+
+        <!-- Presets -->
+        <div class="mt-5 pt-4 border-t border-slate-800">
+          <p class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Quick Demo Presets</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="loadPreset('matcha')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">🍵 Ceramic Matcha Set</button>
+            <button onclick="loadPreset('candle')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">🕯️ Soy Ember Candle</button>
+            <button onclick="loadPreset('wallet')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">👛 Leather Cardholder</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── RIGHT: Results ─────────────────────────── -->
+    <section class="lg:col-span-7 space-y-5">
+
+      <!-- Empty state -->
+      <div id="empty-state" class="glass rounded-2xl p-12 text-center border border-dashed border-slate-800">
+        <div class="w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700 mx-auto flex items-center justify-center text-slate-500 mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Your Optimised Listing Appears Here</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Select a demo preset or fill in your product details, then click <em>Optimize with Gemma 4</em>.</p>
+      </div>
+
+      <!-- Results container (hidden until first run) -->
+      <div id="results" class="hidden space-y-5">
+
+        <!-- ① Title + Tags card -->
+        <div class="glass rounded-2xl p-6 grad-border result-section">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+            <div class="flex items-center gap-2">
+              <span id="r-platform-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wide">Etsy</span>
+              <span id="r-time" class="text-[11px] text-slate-500 font-mono"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="saveCurrentListing()" id="save-btn"
+                class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
+                <span id="save-label">Save to Atlas</span>
+              </button>
+              <button onclick="copyMarkdown()"
+                class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">Copy MD</button>
+            </div>
+          </div>
+
+          <!-- Title -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+              <span class="font-semibold text-slate-300">Algorithmic SEO Title</span>
+              <span id="r-title-chars" class="font-mono text-[11px]">0 chars</span>
+            </div>
+            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-sm font-semibold text-emerald-300 leading-snug flex items-start justify-between gap-2">
+              <span id="r-title">—</span>
+              <button onclick="copyText(document.getElementById('r-title').textContent)" class="text-slate-500 hover:text-emerald-400 transition shrink-0" title="Copy">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 13 Tags -->
+          <div>
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="font-semibold text-slate-300">13 Search Algorithm Tags</span>
+              <button onclick="copyAllTags()" class="text-emerald-400 hover:underline text-[11px]">Copy all 13</button>
+            </div>
+            <div id="r-tags" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+
+        <!-- ② 3-Tier Pricing card -->
+        <div class="glass rounded-2xl p-6 result-section">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            3-Tier Psychological Pricing Matrix
+          </h3>
+          <div id="r-pricing" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- ③ Story + Bullets + Care card -->
+        <div class="glass rounded-2xl p-6 space-y-4 result-section">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+              Artisan Origin Story
+            </h3>
+            <p id="r-story" class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 rounded-xl border border-slate-800 p-3.5"></p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-xs font-bold text-slate-300 mb-1.5">Key Specifications</h4>
+              <ul id="r-bullets" class="text-xs text-slate-400 space-y-1 list-disc list-inside"></ul>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-300 mb-1.5">Shipping & Care</h4>
+              <p id="r-care" class="text-xs text-slate-400 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ④ ElevenLabs Audio Pitch card -->
+        <div class="glass rounded-2xl p-6 border border-amber-500/25 result-section">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+              </svg>
+              ElevenLabs 30-Second Audio Pitch
+            </h3>
+            <button onclick="generateAudio()" id="audio-btn"
+              class="text-xs px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5 shadow shadow-amber-500/20">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              </svg>
+              <span id="audio-label">Generate Audio</span>
+            </button>
+          </div>
+          <p id="r-audio-script" class="text-xs italic text-slate-400 font-mono bg-slate-900/60 border border-slate-800 rounded-xl p-3 leading-relaxed"></p>
+          <audio id="audio-player" controls class="w-full mt-3 hidden rounded-lg h-9"></audio>
+        </div>
+
+        <!-- ⑤ Open Innovation Rationale card -->
+        <div class="glass rounded-2xl p-5 border border-emerald-500/25 bg-emerald-950/10 result-section">
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Why Open-Weight Gemma Protects Your Side-Hustle
+          </h4>
+          <p id="r-open-rationale" class="text-xs text-slate-300 leading-relaxed"></p>
+        </div>
+
+      </div><!-- /results -->
+    </section>
+  </div>
+
+  <!-- ─── SAVED CATALOG ────────────────────────────────── -->
+  <section id="catalog-section" class="mt-20 pt-10 border-t border-slate-800/60">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          📦 Your Product Catalog
+          <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-mono" id="catalog-storage-badge">MongoDB Atlas</span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Device-isolated · persists across sessions · no login required</p>
+      </div>
+      <button onclick="loadCatalog()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+    <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="col-span-full py-12 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+        No saved listings yet. Generate and save one above!
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-slate-800/50 py-8 text-center text-[11px] text-slate-500">
+  CraftOptima · Hacktoberfest 2026 Week 2 · Side Hustle · MIT License ·
+  Powered by Google Gemma 4, Render, MongoDB Atlas & ElevenLabs
+</footer>
+
+<!-- ─── APPLICATION LOGIC ─────────────────────────────── -->
+<script>
+  // ── Config ──────────────────────────────────────────
+  const API =
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:8000'
+      : '';          // same origin when deployed on Render + static host
+
+  // Anonymous device ID for multi-tenant catalog isolation
+  let userId = localStorage.getItem('co_uid');
+  if (!userId) {
+    userId = 'seller_' + crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+    localStorage.setItem('co_uid', userId);
+  }
+
+  // Demo presets
+  const PRESETS = {
+    matcha: {
+      platform: 'Etsy',
+      name: 'Handmade Speckled Ceramic Matcha Bowl with 100-Prong Bamboo Chasen Whisk',
+      materials: 'Stoneware clay, food-safe cream satin glaze, natural bamboo',
+      price: '22',
+      audience: 'Tea ceremony practitioners, mindful morning ritualists, zen home decor lovers',
+      features: 'Wheel-thrown individually; contoured thumb rest; 14 oz capacity; microwave & dishwasher safe; authentic 100-prong bamboo whisk included.'
+    },
+    candle: {
+      platform: 'Etsy',
+      name: 'Wood Smoke & Amber Hand-Poured Botanical Soy Candle',
+      materials: '100% natural soy wax, crackling wooden wick, phthalate-free fragrance blend',
+      price: '11',
+      audience: 'Cozy-autumn lovers, bookish home decor shoppers, slow-living enthusiasts',
+      features: '8 oz amber glass jar with brass lid; 50-hour clean burn; scent notes of smoked birch, warm amber, dried cedarwood.'
+    },
+    wallet: {
+      platform: 'Shopify',
+      name: 'Minimalist Full-Grain Vegetable-Tanned Leather Card Wallet',
+      materials: '3.5 oz Italian vegetable-tanned leather, waxed polyester thread (saddle stitch)',
+      price: '15',
+      audience: 'EDC minimalists, craftsmanship purists, groomsmen gift shoppers',
+      features: 'Hand-stitched saddle stitch (won\'t unravel if a thread breaks); 3 card slots + folded cash pocket; deepens to rich patina over years of use; 7 × 10 cm.'
+    }
+  };
+
+  // Hold last generated data
+  let lastData = null;
+  let lastPlatform = 'Etsy';
+
+  // ── Preset loader ────────────────────────────────────
+  function loadPreset(key) {
+    const p = PRESETS[key];
+    document.getElementById('f-name').value = p.name;
+    document.getElementById('f-materials').value = p.materials;
+    document.getElementById('f-price').value = p.price;
+    document.getElementById('f-audience').value = p.audience;
+    document.getElementById('f-features').value = p.features;
+    document.querySelector(`input[name="platform"][value="${p.platform}"]`).checked = true;
+  }
+
+  // ── Main: call backend ───────────────────────────────
+  async function runOptimize() {
+    const btn   = document.getElementById('gen-btn');
+    const label = document.getElementById('gen-label');
+    const icon  = document.getElementById('gen-icon');
+
+    const platform = document.querySelector('input[name="platform"]:checked')?.value || 'Etsy';
+    const name     = document.getElementById('f-name').value.trim();
+    if (!name) return;
+
+    btn.disabled = true;
+    label.textContent = 'Generating…';
+    icon.classList.add('spin-slow');
+
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`${API}/api/generate-listing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_name: name,
+          materials: document.getElementById('f-materials').value.trim() || null,
+          target_platform: platform,
+          target_audience: document.getElementById('f-audience').value.trim() || null,
+          key_features: document.getElementById('f-features').value.trim() || null,
+          current_price_estimate: parseFloat(document.getElementById('f-price').value) || null,
+          user_id: userId
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || res.statusText);
+      }
+
+      const data = await res.json();
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      lastData = data;
+      lastPlatform = platform;
+      renderResults(data, platform, elapsed);
+
+    } catch (e) {
+      alert('❌ Generation failed:\n' + e.message +
+        '\n\nMake sure the backend is running and GEMINI_API_KEY is set.');
+    } finally {
+      btn.disabled = false;
+      label.textContent = 'Optimize with Gemma 4';
+      icon.classList.remove('spin-slow');
+    }
+  }
+
+  // ── Render results ───────────────────────────────────
+  function renderResults(data, platform, elapsed) {
+    document.getElementById('empty-state').classList.add('hidden');
+    const r = document.getElementById('results');
+    r.classList.remove('hidden');
+
+    // Badge + timing
+    document.getElementById('r-platform-badge').textContent = platform + ' Optimised';
+    document.getElementById('r-time').textContent = `Generated in ${elapsed}s`;
+
+    // Title
+    const title = data.optimized_title || '';
+    document.getElementById('r-title').textContent = title;
+    document.getElementById('r-title-chars').textContent = `${title.length} chars`;
+
+    // Tags
+    const tagsEl = document.getElementById('r-tags');
+    tagsEl.innerHTML = '';
+    (data.seo_tags || []).forEach(tag => {
+      const clean = tag.replace(/^#/, '');
+      const btn = document.createElement('button');
+      btn.className = 'tag-chip text-xs px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 text-slate-300 font-mono transition';
+      btn.textContent = '#' + clean;
+      btn.title = 'Click to copy';
+      btn.onclick = () => {
+        navigator.clipboard.writeText(clean);
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('text-emerald-400', 'border-emerald-500');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('text-emerald-400', 'border-emerald-500'); }, 1300);
+      };
+      tagsEl.appendChild(btn);
+    });
+
+    // Pricing tiers
+    const pricingEl = document.getElementById('r-pricing');
+    pricingEl.innerHTML = '';
+    const tiers = data.pricing_strategy?.pricing_tiers || [];
+    const tierColors = ['text-sky-400', 'text-amber-400', 'text-purple-400'];
+    tiers.forEach((tier, i) => {
+      const card = document.createElement('div');
+      card.className = 'p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col gap-1';
+      card.innerHTML = `
+        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${tier.tier_name}</div>
+        <div class="text-[2rem] font-black ${tierColors[i] || 'text-slate-200'} leading-none">$${Number(tier.price).toFixed(2)}</div>
+        <p class="text-[11px] text-slate-400 leading-snug mt-1">${tier.rationale}</p>`;
+      pricingEl.appendChild(card);
+    });
+
+    // Story
+    document.getElementById('r-story').textContent = data.compelling_story || '';
+
+    // Bullets
+    const bulletsEl = document.getElementById('r-bullets');
+    bulletsEl.innerHTML = '';
+    (data.bullet_features || []).forEach(b => {
+      const li = document.createElement('li'); li.textContent = b; bulletsEl.appendChild(li);
+    });
+
+    // Care
+    document.getElementById('r-care').textContent = data.shipping_and_care_tips || '';
+
+    // Audio script
+    document.getElementById('r-audio-script').textContent = `"${data.audio_pitch_script || ''}"`;
+    document.getElementById('audio-player').classList.add('hidden');
+    document.getElementById('audio-label').textContent = 'Generate Audio';
+
+    // Open innovation
+    document.getElementById('r-open-rationale').textContent = data.open_innovation_rationale || '';
+
+    r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── ElevenLabs audio ─────────────────────────────────
+  async function generateAudio() {
+    if (!lastData?.audio_pitch_script) return;
+    const btn   = document.getElementById('audio-btn');
+    const label = document.getElementById('audio-label');
+    const player = document.getElementById('audio-player');
+
+    btn.disabled = true;
+    label.textContent = 'Synthesising…';
+
+    try {
+      const res = await fetch(`${API}/api/audio-pitch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: lastData.audio_pitch_script })
+      });
+
+      if (!res.ok) throw new Error(`ElevenLabs error ${res.status}`);
+
+      const blob = await res.blob();
+      player.src = URL.createObjectURL(blob);
+      player.classList.remove('hidden');
+      player.play();
+      label.textContent = 'Play Again';
+    } catch (e) {
+      alert('Voice synthesis failed:\n' + e.message +
+        '\n\nCheck that ELEVENLABS_API_KEY is configured on the backend.');
+      label.textContent = 'Generate Audio';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Save to Atlas ────────────────────────────────────
+  async function saveCurrentListing() {
+    if (!lastData) return;
+    const btn   = document.getElementById('save-btn');
+    const label = document.getElementById('save-label');
+
+    btn.disabled = true;
+    label.textContent = 'Saving…';
+
+    try {
+      const res = await fetch(`${API}/api/listings/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          product_name: document.getElementById('f-name').value.trim(),
+          platform: lastPlatform,
+          data: lastData
+        })
+      });
+      const resp = await res.json();
+      label.textContent = resp.storage === 'mongodb_atlas' ? '✓ Saved to Atlas!' : '✓ Saved Locally!';
+      loadCatalog();
+      setTimeout(() => { label.textContent = 'Save to Atlas'; btn.disabled = false; }, 2000);
+    } catch (e) {
+      alert('Save failed: ' + e.message);
+      label.textContent = 'Save to Atlas';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Catalog ──────────────────────────────────────────
+  async function loadCatalog() {
+    try {
+      const res  = await fetch(`${API}/api/listings?user_id=${encodeURIComponent(userId)}`);
+      const data = await res.json();
+      const items = data.listings || [];
+
+      document.getElementById('nav-count').textContent = items.length;
+      document.getElementById('catalog-storage-badge').textContent =
+        data.storage === 'mongodb_atlas' ? 'MongoDB Atlas' : 'Local Memory';
+
+      const grid = document.getElementById('catalog-grid');
+      if (items.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">No saved listings yet. Generate and save one above!</div>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      items.forEach(item => {
+        const rec  = item.data?.pricing_strategy?.pricing_tiers?.[1]?.price;
+        const card = document.createElement('div');
+        card.className = 'glass rounded-xl p-4 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between gap-3';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between text-[10px] mb-1.5">
+              <span class="font-mono font-bold text-emerald-400 uppercase">${item.platform}</span>
+              <span class="text-slate-500">${new Date(item.created_at).toLocaleDateString()}</span>
+            </div>
+            <h4 class="text-sm font-bold text-white leading-snug line-clamp-2">${item.product_name}</h4>
+            <p class="text-[11px] text-slate-400 mt-1 line-clamp-1">${item.data?.optimized_title || ''}</p>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+            <span class="text-base font-black text-amber-400">${rec != null ? '$' + Number(rec).toFixed(2) : '—'}</span>
+            <button class="text-xs text-emerald-400 hover:underline" onclick="loadSaved(this)">View →</button>
+          </div>`;
+        card.querySelector('button').dataset.payload = JSON.stringify(item);
+        grid.appendChild(card);
+      });
+    } catch (e) {
+      console.warn('Catalog load failed:', e);
+    }
+  }
+
+  function loadSaved(btn) {
+    const item = JSON.parse(btn.dataset.payload);
+    lastData = item.data;
+    lastPlatform = item.platform;
+    renderResults(item.data, item.platform, '—');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function scrollToCatalog() {
+    document.getElementById('catalog-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Clipboard helpers ────────────────────────────────
+  function copyText(txt) {
+    navigator.clipboard.writeText(txt);
+  }
+
+  function copyAllTags() {
+    if (!lastData?.seo_tags) return;
+    const tags = lastData.seo_tags.join(', ');
+    navigator.clipboard.writeText(tags);
+    alert('Copied 13 tags:\n' + tags);
+  }
+
+  function copyMarkdown() {
+    if (!lastData) return;
+    const d = lastData;
+    const md = [
+      `# ${d.optimized_title}`,
+      '',
+      `**Tags:** ${d.seo_tags.join(', ')}`,
+      '',
+      '## Artisan Story',
+      d.compelling_story,
+      '',
+      '## Pricing',
+      ...d.pricing_strategy.pricing_tiers.map(t => `- **${t.tier_name}:** $${t.price} — ${t.rationale}`),
+      '',
+      '## Specifications',
+      ...d.bullet_features.map(b => `- ${b}`),
+      '',
+      '## Care & Shipping',
+      d.shipping_and_care_tips
+    ].join('\n');
+    navigator.clipboard.writeText(md);
+    alert('Markdown copied to clipboard!');
+  }
+
+  // ── Init ─────────────────────────────────────────────
+  loadCatalog();
+</script>
+</body>
+</html>
