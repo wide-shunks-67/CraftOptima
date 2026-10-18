@@ -134,6 +134,7 @@ Update the `API` constant in `frontend/index.html` with your Render backend URL 
 | `POST` | `/api/audio-pitch` | ElevenLabs MP3 voiceover synthesis |
 | `POST` | `/api/listings/save` | Save listing to MongoDB Atlas (or in-memory fallback) |
 | `GET` | `/api/listings?user_id=…` | Retrieve saved listings for a given user |
+| `DELETE` | `/api/listings/{id}?user_id=…` | Delete a saved listing (with user ownership check) |
 
 Full interactive docs available at `GET /docs` (Swagger UI).
 
