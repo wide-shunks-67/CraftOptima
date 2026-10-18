@@ -1000,6 +1000,10 @@
   // ── Shared state ─────────────────────────────────
   let lastData = null, lastPlatform = 'Etsy';
 
+  // ── Background Warmup Ping ────────────────────────
+  // Pings Render /api/health immediately when the page opens so the server wakes up in the background
+  fetch(`${API}/api/health`).catch(() => {});
+
   // ── Run optimize ─────────────────────────────────
   async function runOptimize() {
     const btn   = document.getElementById('gen-btn');
@@ -1012,6 +1016,15 @@
     btn.disabled = true;
     label.textContent = 'Analysing with Gemma 4…';
     icon.classList.add('spinner');
+
+    // Helpful status stages if cloud server is in cold-start
+    const tColdStart = setTimeout(() => {
+      label.textContent = 'Waking up cloud backend (~20s on first load)…';
+    }, 4500);
+
+    const tGemma = setTimeout(() => {
+      label.textContent = 'Generating 13 tags & pricing strategy…';
+    }, 22000);
 
     const t0 = Date.now();
     try {
@@ -1035,6 +1048,8 @@
     } catch(e) {
       alert('Generation failed:\n' + e.message);
     } finally {
+      clearTimeout(tColdStart);
+      clearTimeout(tGemma);
       btn.disabled = false;
       label.textContent = 'Optimize Listing with Gemma 4';
       icon.classList.remove('spinner');

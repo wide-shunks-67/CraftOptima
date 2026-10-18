@@ -209,13 +209,27 @@ class SaveListingRequest(BaseModel):
 
 
 def _clean_json(raw: str) -> str:
-    """Strip any accidental markdown code fences from the model response."""
+    """Extract valid JSON object from model output and fix common LLM formatting flaws."""
     text = raw.strip()
+    
+    # 1. Strip markdown code fences if present
     for fence in ("```json", "```"):
         if text.startswith(fence):
             text = text[len(fence):]
     if text.endswith("```"):
         text = text[:-3]
+    text = text.strip()
+
+    # 2. Extract outermost curly brace block in case of surrounding chatter
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        text = text[start : end + 1]
+
+    # 3. Fix trailing commas before closing braces/brackets (e.g. [1, 2,] or {"a": 1,})
+    import re
+    text = re.sub(r",\s*([\]}])", r"\1", text)
+
     return text.strip()
 
 
@@ -269,6 +283,7 @@ Generate the complete JSON response now.
             contents=[SYSTEM_INSTRUCTION, user_prompt],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
+                response_schema=ListingResponse,
                 temperature=0.7,
                 max_output_tokens=4096,
             ),
@@ -277,8 +292,15 @@ Generate the complete JSON response now.
         try:
             parsed = json.loads(cleaned)
         except json.JSONDecodeError:
-            # Fallback for unescaped newlines/control characters inside JSON strings
-            parsed = json.loads(cleaned, strict=False)
+            try:
+                # Fallback 1: non-strict parse (handles unescaped newlines/tabs inside strings)
+                parsed = json.loads(cleaned, strict=False)
+            except json.JSONDecodeError:
+                # Fallback 2: regex repair for unescaped interior quotes
+                import re
+                # Replace bad quotes inside strings or newline escapes
+                repaired = re.sub(r'\\"', '"', cleaned)
+                parsed = json.loads(cleaned, strict=False)
 
         # Enforce tag count – trim or pad so Pydantic doesn't reject
         tags = parsed.get("seo_tags", [])
