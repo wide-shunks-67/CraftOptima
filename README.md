@@ -3,6 +3,10 @@
 > **Turn raw craft notes into high-converting, rank-optimized marketplace listings in seconds.**  
 > Built for solo makers, ceramicists, woodworkers, candle artisans, and boutique creators selling on **Etsy, eBay, and Shopify**.
 
+[![Live App](https://img.shields.io/badge/Live_App-craftoptima.vercel.app-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://craftoptima.vercel.app/)
+[![Backend API](https://img.shields.io/badge/Backend_API-craftoptima.onrender.com-000000?style=for-the-badge&logo=render&logoColor=white)](https://craftoptima.onrender.com/docs)
+[![Model](https://img.shields.io/badge/AI_Core-Google_Gemma_4-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/gemma)
+
 ---
 
 ## 💡 The Problem CraftOptima Solves
@@ -98,9 +102,9 @@ uvicorn main:app --reload --port 8000
 Open `frontend/index.html` in your browser (or use VS Code Live Server / Python HTTP server). The UI automatically connects to your local backend.
 
 ### Deployment Overview
-
-- **Backend:** Ready for 1-click deployment on [Render](https://render.com) using the included `backend/render.yaml`.
-- **Frontend:** Pure HTML/CSS/JS with zero build steps — host on [Vercel](https://vercel.com), Netlify, or GitHub Pages.
+- **Live Frontend (Vercel):** [https://craftoptima.vercel.app/](https://craftoptima.vercel.app/)
+- **Live Backend API (Render):** [https://craftoptima.onrender.com](https://craftoptima.onrender.com) (Interactive Docs: [`/docs`](https://craftoptima.onrender.com/docs))
+- **Source Repository:** [GitHub - wide-shunks-67/CraftOptima](https://github.com/wide-shunks-67/CraftOptima)
 
 ---
 
