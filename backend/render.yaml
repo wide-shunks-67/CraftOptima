@@ -2,6 +2,7 @@ services:
   - type: web
     name: craftoptima-backend
     runtime: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -10,7 +11,7 @@ services:
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: ELEVENLABS_VOICE_ID
-        value: 21m00Tcm4TlvDq8ikWAM
+        value: EXAVITQu4vr4xnSDxMaL
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB_NAME
