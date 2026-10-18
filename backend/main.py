@@ -134,6 +134,7 @@ exact keys (no extra keys, no markdown fences):
 Rules:
 - seo_tags must contain EXACTLY 13 items. Count carefully.
 - pricing_tiers must contain EXACTLY 3 items.
+- CRITICAL: Never include raw unescaped double quotes (") inside any string value; use single quotes (') or descriptive words instead.
 - Respond with valid JSON ONLY. No preamble, no markdown.
 """.strip()
 
@@ -211,7 +212,7 @@ class SaveListingRequest(BaseModel):
 def _clean_json(raw: str) -> str:
     """Extract valid JSON object from model output and fix common LLM formatting flaws."""
     text = raw.strip()
-    
+
     # 1. Strip markdown code fences if present
     for fence in ("```json", "```"):
         if text.startswith(fence):
@@ -226,7 +227,10 @@ def _clean_json(raw: str) -> str:
     if start != -1 and end != -1 and end > start:
         text = text[start : end + 1]
 
-    # 3. Fix trailing commas before closing braces/brackets (e.g. [1, 2,] or {"a": 1,})
+    # 3. Fix unescaped control characters like literal tabs and carriage returns
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    # 4. Fix trailing commas before closing braces/brackets (e.g. [1, 2,] or {"a": 1,})
     import re
     text = re.sub(r",\s*([\]}])", r"\1", text)
 
@@ -277,51 +281,63 @@ Seller's Cost Estimate: {price_note}
 Generate the complete JSON response now.
 """.strip()
 
-    try:
-        response = gemini_client.models.generate_content(
-            model=GEMMA_MODEL,
-            contents=[SYSTEM_INSTRUCTION, user_prompt],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=ListingResponse,
-                temperature=0.7,
-                max_output_tokens=4096,
-            ),
-        )
-        cleaned = _clean_json(response.text)
+    # Try primary open-weight Gemma model first; fallback to ultra-reliable gemini-3.5-flash
+    models_to_try = [GEMMA_MODEL, "gemini-3.5-flash"]
+    last_exc = None
+
+    for model_name in models_to_try:
         try:
-            parsed = json.loads(cleaned)
-        except json.JSONDecodeError:
+            response = gemini_client.models.generate_content(
+                model=model_name,
+                contents=[SYSTEM_INSTRUCTION, user_prompt],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=ListingResponse,
+                    temperature=0.7,
+                    max_output_tokens=4096,
+                ),
+            )
+            cleaned = _clean_json(response.text)
             try:
-                # Fallback 1: non-strict parse (handles unescaped newlines/tabs inside strings)
-                parsed = json.loads(cleaned, strict=False)
+                parsed = json.loads(cleaned)
             except json.JSONDecodeError:
-                # Fallback 2: regex repair for unescaped interior quotes
-                import re
-                # Replace bad quotes inside strings or newline escapes
-                repaired = re.sub(r'\\"', '"', cleaned)
-                parsed = json.loads(cleaned, strict=False)
+                try:
+                    parsed = json.loads(cleaned, strict=False)
+                except json.JSONDecodeError:
+                    # Repair unescaped newlines inside strings
+                    import re
+                    # Replace literal raw newlines inside JSON strings with spaces
+                    repaired = re.sub(r'(?<!\\)\n', ' ', cleaned)
+                    try:
+                        parsed = json.loads(repaired, strict=False)
+                    except json.JSONDecodeError:
+                        # Close any unterminated string before end
+                        if not repaired.endswith('}'):
+                            repaired += '"}'
+                        parsed = json.loads(repaired, strict=False)
 
-        # Enforce tag count – trim or pad so Pydantic doesn't reject
-        tags = parsed.get("seo_tags", [])
-        if len(tags) > 13:
-            parsed["seo_tags"] = tags[:13]
-        elif len(tags) < 13:
-            parsed["seo_tags"] = tags + [req.product_name.lower()] * (13 - len(tags))
+            # Enforce tag count – trim or pad
+            tags = parsed.get("seo_tags", [])
+            if len(tags) > 13:
+                parsed["seo_tags"] = tags[:13]
+            elif len(tags) < 13:
+                parsed["seo_tags"] = tags + [req.product_name.lower()] * (13 - len(tags))
 
-        # Enforce exactly 3 pricing tiers
-        tiers = parsed.get("pricing_strategy", {}).get("pricing_tiers", [])
-        if len(tiers) > 3:
-            parsed["pricing_strategy"]["pricing_tiers"] = tiers[:3]
+            # Enforce exactly 3 pricing tiers
+            tiers = parsed.get("pricing_strategy", {}).get("pricing_tiers", [])
+            if len(tiers) > 3:
+                parsed["pricing_strategy"]["pricing_tiers"] = tiers[:3]
 
-        return ListingResponse(**parsed)
+            logger.info("Listing generated successfully using %s", model_name)
+            return ListingResponse(**parsed)
 
-    except json.JSONDecodeError as exc:
-        logger.error("Gemma returned invalid JSON: %s", exc)
-        raise HTTPException(status_code=502, detail=f"Model returned malformed JSON: {exc}")
-    except Exception as exc:
-        logger.error("Listing generation error: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        except Exception as exc:
+            logger.warning("Generation with %s failed: %s; trying fallback...", model_name, exc)
+            last_exc = exc
+            continue
+
+    logger.error("All model generation attempts failed: %s", last_exc)
+    raise HTTPException(status_code=502, detail=f"Generation failed across models: {last_exc}")
 
 
 @app.post("/api/audio-pitch", tags=["Audio"])
