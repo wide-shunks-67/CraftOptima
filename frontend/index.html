@@ -1,434 +1,864 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CraftOptima — AI Listing Optimizer for Artisan Side-Hustles</title>
+  <title>CraftOptima — AI Listing Optimizer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme: dark; }
-
-    .glass {
-      background: rgba(15, 20, 35, 0.72);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255,255,255,0.07);
+    /* ─── CSS VARIABLES (Light / Dark) ─── */
+    :root {
+      --bg-base:        #f0f6ff;
+      --bg-surface:     #ffffff;
+      --bg-surface-2:   #eaf2ff;
+      --bg-surface-3:   #dceeff;
+      --border:         #c8ddf7;
+      --border-strong:  #9fc4f0;
+      --text-primary:   #0f1f3d;
+      --text-secondary: #3a5a8a;
+      --text-muted:     #7494bb;
+      --accent:         #2563eb;
+      --accent-light:   #dbeafe;
+      --accent-hover:   #1d4ed8;
+      --amber:          #d97706;
+      --amber-light:    #fef3c7;
+      --emerald:        #059669;
+      --emerald-light:  #d1fae5;
+      --purple:         #7c3aed;
+      --purple-light:   #ede9fe;
+      --red:            #dc2626;
+      --tag-bg:         #dbeafe;
+      --tag-text:       #1e40af;
+      --tag-border:     #bfdbfe;
+      --tag-hover:      #bfdbfe;
+      --shadow-sm:      0 1px 3px rgba(37,99,235,.08), 0 1px 2px rgba(37,99,235,.06);
+      --shadow-md:      0 4px 16px rgba(37,99,235,.10), 0 2px 6px rgba(37,99,235,.06);
+      --shadow-lg:      0 10px 40px rgba(37,99,235,.12);
+      --radius:         14px;
+      --radius-sm:      8px;
+      --radius-lg:      20px;
+      --nav-height:     62px;
+    }
+    [data-theme="dark"] {
+      --bg-base:        #0b1120;
+      --bg-surface:     #131c2e;
+      --bg-surface-2:   #1a2540;
+      --bg-surface-3:   #1f2d4a;
+      --border:         #1e3156;
+      --border-strong:  #2d4a78;
+      --text-primary:   #e8f0fe;
+      --text-secondary: #90aed4;
+      --text-muted:     #4d6a96;
+      --accent:         #3b82f6;
+      --accent-light:   #1e3a5f;
+      --accent-hover:   #60a5fa;
+      --amber:          #fbbf24;
+      --amber-light:    #2d2000;
+      --emerald:        #34d399;
+      --emerald-light:  #002d20;
+      --purple:         #a78bfa;
+      --purple-light:   #1e1040;
+      --tag-bg:         #1e3a5f;
+      --tag-text:       #93c5fd;
+      --tag-border:     #1e3a5f;
+      --tag-hover:      #2d4a78;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,.3);
+      --shadow-md:      0 4px 16px rgba(0,0,0,.4);
+      --shadow-lg:      0 10px 40px rgba(0,0,0,.5);
     }
 
-    .grad-border {
-      position: relative;
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background .25s, color .25s;
     }
-    .grad-border::before {
-      content: '';
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(52,211,153,.5), rgba(251,191,36,.3), rgba(99,102,241,.2));
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
+    input, textarea, select, button { font-family: inherit; }
+    button { cursor: pointer; }
+    a { text-decoration: none; color: inherit; }
 
-    .tag-chip:active { transform: scale(0.94); }
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
 
-    @keyframes spin-slow { to { transform: rotate(360deg); } }
-    .spin-slow { animation: spin-slow 1.4s linear infinite; }
-
-    .result-section { animation: fadeUp .35s ease both; }
+    /* ─── ANIMATIONS ─── */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-in { animation: fadeUp .35s ease both; }
+    .spinner { animation: spin 1.1s linear infinite; }
 
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 9999px; }
+    /* ─── NAV ─── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-height);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      transition: background .25s, border-color .25s;
+    }
+    .nav-inner {
+      max-width: 1200px; width: 100%; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(37,99,235,.35);
+    }
+    .logo-icon svg { width: 18px; height: 18px; color: white; }
+    .logo-name { font-size: 18px; font-weight: 800; letter-spacing: -.4px; color: var(--text-primary); }
+    .logo-name span { color: var(--accent); }
+    .logo-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-catalog-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-surface-2);
+      color: var(--text-secondary); font-size: 12px; font-weight: 500;
+      transition: all .2s;
+    }
+    .nav-catalog-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-catalog-btn svg { width: 14px; height: 14px; }
+    .status-dot {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);
+    }
+    .status-dot span:first-child {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.25);
+      animation: pulse 2.5s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.5 } }
+    .theme-btn {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-surface-2);
+      color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all .2s;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ─── HERO ─── */
+    .hero {
+      max-width: 800px; margin: 0 auto; text-align: center;
+      padding: 48px 24px 36px;
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 14px; border-radius: 99px;
+      border: 1px solid var(--border-strong); background: var(--accent-light);
+      font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 20px;
+    }
+    .hero-pill svg { width: 12px; height: 12px; }
+    .hero h1 {
+      font-size: clamp(26px, 4vw, 40px); font-weight: 800;
+      letter-spacing: -.8px; line-height: 1.18; color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #2563eb, #06b6d4, #6366f1);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 15px; color: var(--text-secondary); line-height: 1.65;
+      max-width: 580px; margin: 0 auto;
+    }
+
+    /* ─── MAIN LAYOUT ─── */
+    .workspace {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px 80px;
+    }
+
+    /* ─── FORM CARD (TOP) ─── */
+    .form-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+      padding: 28px; margin-bottom: 24px;
+      transition: background .25s, border-color .25s;
+    }
+    .form-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 22px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-header h2 {
+      font-size: 15px; font-weight: 700; color: var(--text-primary);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .form-header h2 svg { width: 16px; height: 16px; color: var(--accent); }
+    .form-header span { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-grid-wide { grid-template-columns: 2fr 1fr 1fr; }
+    @media (max-width: 768px) {
+      .form-grid, .form-grid-wide { grid-template-columns: 1fr; }
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    label.field-label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .field-label .req { color: var(--red); margin-left: 2px; }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%; padding: 9px 13px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-base); color: var(--text-primary);
+      font-size: 13px; transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    input::placeholder, textarea::placeholder { color: var(--text-muted); }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* Platform Selector */
+    .platform-group { display: flex; gap: 8px; }
+    .platform-opt { flex: 1; }
+    .platform-opt input { display: none; }
+    .platform-opt label {
+      display: block; text-align: center;
+      padding: 8px 6px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); background: var(--bg-surface-2);
+      color: var(--text-muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all .2s; user-select: none;
+    }
+    .platform-opt input:checked + label {
+      border-color: var(--accent); background: var(--accent-light);
+      color: var(--accent);
+    }
+    .platform-opt label:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Presets */
+    .presets-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .presets-label { font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preset-chip {
+      padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 500;
+      border: 1px solid var(--border); background: var(--bg-surface-2);
+      color: var(--text-secondary); transition: all .2s;
+    }
+    .preset-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+    /* Generate Button */
+    .btn-generate {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px 24px; margin-top: 18px;
+      border: none; border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: white; font-size: 14px; font-weight: 700; letter-spacing: -.2px;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35); transition: all .2s;
+    }
+    .btn-generate:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.45); }
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+    .btn-generate:disabled { opacity: .65; cursor: not-allowed; }
+    .btn-generate svg { width: 16px; height: 16px; }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state {
+      background: var(--bg-surface); border: 2px dashed var(--border);
+      border-radius: var(--radius-lg); padding: 56px 24px;
+      text-align: center; transition: background .25s, border-color .25s;
+    }
+    .empty-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: var(--bg-surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+      color: var(--text-muted);
+    }
+    .empty-icon svg { width: 28px; height: 28px; }
+    .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto; line-height: 1.6; }
+
+    /* ─── RESULTS AREA ─── */
+    .results-area { display: none; }
+
+    /* Result top bar */
+    .result-topbar {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .result-topbar-left { display: flex; align-items: center; gap: 10px; }
+    .platform-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+      background: var(--accent-light); color: var(--accent); letter-spacing: .3px;
+    }
+    .result-time { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+    .result-actions { display: flex; gap: 8px; }
+    .btn-action {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
+      border: 1px solid var(--border); background: var(--bg-surface-2);
+      color: var(--text-secondary); transition: all .2s;
+    }
+    .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action svg { width: 13px; height: 13px; }
+    .btn-save {
+      background: var(--accent); color: white; border-color: var(--accent);
+    }
+    .btn-save:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
+
+    /* ─── RESULT GRID ─── */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      gap: 16px;
+    }
+    @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr; } }
+    .result-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow-sm); transition: background .25s, border-color .25s;
+      animation: fadeUp .3s ease both;
+    }
+    .result-card.full-width { grid-column: 1 / -1; }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+    }
+    .card-title {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--text-secondary);
+    }
+    .card-title svg { width: 14px; height: 14px; color: var(--accent); }
+    .card-action {
+      font-size: 11px; color: var(--accent); font-weight: 600;
+      background: none; border: none; cursor: pointer;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .card-action:hover { background: var(--accent-light); }
+
+    /* Title card */
+    .seo-title {
+      font-size: 15px; font-weight: 700; color: var(--accent);
+      line-height: 1.45; padding: 12px 14px;
+      background: var(--bg-surface-2); border-radius: var(--radius-sm);
+      border: 1px solid var(--border); position: relative;
+    }
+    .seo-title-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 8px;
+    }
+    .char-count {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);
+    }
+    .copy-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; color: var(--accent); font-weight: 600;
+      background: none; border: none; cursor: pointer; padding: 3px 8px;
+      border-radius: 4px; transition: background .15s;
+    }
+    .copy-btn:hover { background: var(--accent-light); }
+    .copy-btn svg { width: 12px; height: 12px; }
+
+    /* Tags */
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-chip {
+      display: inline-block;
+      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--tag-bg); color: var(--tag-text); border: 1px solid var(--tag-border);
+      cursor: pointer; transition: all .15s;
+    }
+    .tag-chip:hover { background: var(--tag-hover); transform: scale(.97); }
+
+    /* Categories */
+    .category-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .category-chip {
+      padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 600;
+      background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-light);
+    }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .price-tier {
+      padding: 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--bg-surface-2);
+      text-align: center;
+    }
+    .price-tier-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 6px; }
+    .price-value { font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px; }
+    .price-value.fast { color: #0891b2; }
+    .price-value.sweet { color: var(--accent); }
+    .price-value.premium { color: var(--purple); }
+    .price-rationale { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .pricing-meta { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 12px; flex-wrap: wrap; }
+    .pricing-meta-item { font-size: 12px; color: var(--text-secondary); }
+    .pricing-meta-item strong { color: var(--text-primary); }
+
+    /* Story */
+    .story-text {
+      font-size: 13.5px; color: var(--text-primary); line-height: 1.75;
+      padding: 14px; background: var(--bg-surface-2); border-radius: var(--radius-sm);
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Bullets + Care */
+    .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .specs-grid { grid-template-columns: 1fr; } }
+    .spec-list { list-style: none; }
+    .spec-list li {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--text-secondary); padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .spec-list li:last-child { border-bottom: none; }
+    .spec-list li::before {
+      content: '✓'; color: var(--emerald); font-weight: 700;
+      font-size: 12px; margin-top: 2px; flex-shrink: 0;
+    }
+    .spec-sub-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .4px; }
+    .care-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+    /* Audio card */
+    .audio-card { border-color: var(--amber-light); }
+    [data-theme="dark"] .audio-card { border-color: #3d2a00; }
+    .audio-script {
+      font-size: 13px; font-style: italic; color: var(--text-secondary);
+      line-height: 1.7; padding: 12px 14px;
+      background: var(--amber-light); border-radius: var(--radius-sm);
+      border: 1px solid var(--border); margin-bottom: 12px;
+    }
+    .btn-audio {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius-sm); border: none;
+      background: var(--amber); color: white; font-size: 13px; font-weight: 700;
+      box-shadow: 0 2px 8px rgba(217,119,6,.3); transition: all .2s;
+    }
+    .btn-audio:hover { background: #b45309; transform: translateY(-1px); }
+    .btn-audio svg { width: 15px; height: 15px; }
+    audio { width: 100%; border-radius: var(--radius-sm); margin-top: 10px; }
+
+    /* Open Innovation card */
+    .oi-card { border-left: 4px solid var(--emerald); }
+    .oi-text { font-size: 13px; color: var(--text-secondary); line-height: 1.75; }
+
+    /* ─── CATALOG ─── */
+    .catalog-section {
+      margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--border);
+    }
+    .catalog-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .catalog-title-group h2 { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 2px; }
+    .catalog-title-group p { font-size: 12px; color: var(--text-muted); }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); background: var(--bg-surface-2);
+      color: var(--text-secondary); font-size: 12px; font-weight: 600; transition: all .2s;
+    }
+    .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-refresh svg { width: 13px; height: 13px; }
+    .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .catalog-empty {
+      grid-column: 1 / -1; padding: 48px; text-align: center;
+      border: 2px dashed var(--border); border-radius: var(--radius-lg);
+      color: var(--text-muted); font-size: 13px;
+    }
+    .catalog-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm);
+      transition: all .2s; display: flex; flex-direction: column; gap: 10px;
+    }
+    .catalog-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .catalog-card-header { display: flex; align-items: center; justify-content: space-between; }
+    .catalog-platform { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--accent); }
+    .catalog-date { font-size: 11px; color: var(--text-muted); }
+    .catalog-name { font-size: 13px; font-weight: 700; color: var(--text-primary); line-height: 1.4; }
+    .catalog-preview-title { font-size: 11px; color: var(--text-muted); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .catalog-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); }
+    .catalog-price { font-size: 18px; font-weight: 900; color: var(--accent); }
+    .btn-view { font-size: 12px; color: var(--accent); font-weight: 600; background: none; border: none; cursor: pointer; }
+    .btn-view:hover { text-decoration: underline; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 24px; text-align: center;
+      font-size: 12px; color: var(--text-muted);
+      border-top: 1px solid var(--border); margin-top: 40px;
+    }
   </style>
 </head>
-<body class="bg-[#080c16] text-slate-100 min-h-screen font-sans antialiased">
+<body>
 
-<!-- ─── NAV ─────────────────────────────────────────── -->
-<header class="sticky top-0 z-50 border-b border-slate-800/70 bg-[#080c16]/80 backdrop-blur-md">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-4">
-
-    <!-- Logo -->
-    <a href="#" class="flex items-center gap-2.5 shrink-0">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+<!-- ─── NAV ─── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
       </div>
-      <div class="leading-none">
-        <span class="text-[17px] font-extrabold tracking-tight">Craft<span class="text-emerald-400">Optima</span></span>
-        <div class="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Side-Hustle AI for Etsy · eBay · Shopify</div>
+      <div>
+        <div class="logo-name">Craft<span>Optima</span></div>
+        <div class="logo-sub">AI Listing Optimizer · Etsy · eBay · Shopify</div>
       </div>
     </a>
 
-    <!-- Right actions -->
-    <div class="flex items-center gap-3">
-      <button onclick="scrollToCatalog()" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 transition text-slate-300">
-        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <div class="nav-right">
+      <div class="status-dot">
+        <span></span>
+        <span>Gemma 4 Live</span>
+      </div>
+      <button class="nav-catalog-btn" onclick="scrollToCatalog()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
         </svg>
         Catalog (<span id="nav-count">0</span>)
       </button>
-      <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        Gemma&nbsp;4&nbsp;Live
-      </div>
+      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
     </div>
   </div>
-</header>
+</nav>
 
-<!-- ─── HERO ─────────────────────────────────────────── -->
-<section class="max-w-3xl mx-auto text-center px-4 pt-14 pb-10">
-  <div class="inline-flex items-center gap-2 text-[11px] px-3 py-1 rounded-full border border-slate-700 bg-slate-800/60 text-slate-300 mb-5">
-    <span class="text-amber-400 font-semibold">⚡ Hacktoberfest 2026 · Week 2 · Side Hustle</span>
-    <span class="text-slate-600">|</span>
-    <span class="text-emerald-400">Open-Weight · Zero Token Tax · Merchant Privacy First</span>
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-pill">
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    </svg>
+    Artisan E-Commerce Intelligence · Open-Weight AI
   </div>
-  <h1 class="text-3xl sm:text-[2.75rem] font-extrabold tracking-tight leading-tight text-white">
-    Turn Handmade Craft Notes into<br>
-    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400">
-      High-Converting Marketplace Listings
-    </span>
-  </h1>
-  <p class="mt-4 text-slate-400 text-base max-w-2xl mx-auto">
-    CraftOptima uses Google's open-weight <strong class="text-slate-200">Gemma 4</strong> to produce
-    rank-optimised titles, exactly 13 search tags, 3-tier psychological pricing, artisan copy,
-    and an ElevenLabs audio pitch — all without sharing your trade secrets with a corporate API.
-  </p>
+  <h1>Turn Handmade Craft Notes into<br><em>High-Converting Marketplace Listings</em></h1>
+  <p>CraftOptima uses Google's open-weight <strong>Gemma 4</strong> to produce rank-optimised titles, 13 search tags, 3-tier pricing, artisan copy, and an ElevenLabs audio pitch — all without sharing your trade secrets with a corporate API.</p>
 </section>
 
-<!-- ─── MAIN WORKSPACE ───────────────────────────────── -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- ─── WORKSPACE ─── -->
+<div class="workspace">
 
-    <!-- ── LEFT: Input Form ───────────────────────── -->
-    <aside class="lg:col-span-5">
-      <div class="glass rounded-2xl p-6 shadow-2xl grad-border">
-        <!-- Header -->
-        <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-            Product Details
-          </h2>
-          <span class="text-[11px] font-mono text-slate-500">Step 1 · Input</span>
+  <!-- Form Card -->
+  <div class="form-card">
+    <div class="form-header">
+      <h2>
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        Product Details
+      </h2>
+      <span>All fields except Product Title are optional</span>
+    </div>
+
+    <form id="gen-form" onsubmit="event.preventDefault(); runOptimize();">
+
+      <!-- Row 1: Platform + Product Name -->
+      <div class="form-grid form-grid-wide" style="margin-bottom:16px;">
+        <div>
+          <label class="field-label">Product Title / Raw Concept <span class="req">*</span></label>
+          <input id="f-name" type="text" required placeholder="e.g. Handmade Speckled Ceramic Matcha Bowl with Bamboo Whisk">
         </div>
-
-        <form id="gen-form" onsubmit="event.preventDefault(); runOptimize();" class="space-y-4">
-
-          <!-- Platform selector -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-2">Target Marketplace</label>
-            <div class="grid grid-cols-3 gap-2">
-              <label class="cursor-pointer"><input type="radio" name="platform" value="Etsy" checked class="peer sr-only">
-                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🧡 Etsy</div>
-              </label>
-              <label class="cursor-pointer"><input type="radio" name="platform" value="eBay" class="peer sr-only">
-                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🏷️ eBay</div>
-              </label>
-              <label class="cursor-pointer"><input type="radio" name="platform" value="Shopify" class="peer sr-only">
-                <div class="py-2 text-center text-xs font-bold rounded-xl border border-slate-800 bg-slate-900/50 text-slate-400 peer-checked:border-emerald-500 peer-checked:text-emerald-300 peer-checked:bg-emerald-500/10 transition select-none">🛍️ Shopify</div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Product name -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-name">Product Title / Raw Concept <span class="text-red-400">*</span></label>
-            <input id="f-name" type="text" required
-              placeholder="e.g. Handmade Speckled Ceramic Matcha Bowl with Bamboo Whisk"
-              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-          </div>
-
-          <!-- Materials + Price -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-materials">Materials / Craft Method</label>
-              <input id="f-materials" type="text"
-                placeholder="e.g. Stoneware clay, food-safe glaze"
-                class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-price">Base Cost / Est. Price ($)</label>
-              <input id="f-price" type="number" step="0.5" min="0"
-                placeholder="e.g. 18.00"
-                class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-            </div>
-          </div>
-
-          <!-- Audience -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-audience">Target Buyer Persona</label>
-            <input id="f-audience" type="text"
-              placeholder="e.g. Mindful gifters, tea ceremony enthusiasts"
-              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-          </div>
-
-          <!-- Features -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1" for="f-features">Unique Features / Dimensions</label>
-            <textarea id="f-features" rows="3"
-              placeholder="e.g. Wheel-thrown individually; speckled cream satin glaze; 14oz capacity; includes authentic 100-prong bamboo chasen whisk; microwave & dishwasher safe."
-              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition resize-none"></textarea>
-          </div>
-
-          <!-- CTA -->
-          <button type="submit" id="gen-btn"
-            class="w-full py-3 rounded-xl font-bold text-sm text-black bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 hover:opacity-90 active:scale-[0.98] shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-            <svg id="gen-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            <span id="gen-label">Optimize with Gemma 4</span>
-          </button>
-        </form>
-
-        <!-- Presets -->
-        <div class="mt-5 pt-4 border-t border-slate-800">
-          <p class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Quick Demo Presets</p>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="loadPreset('matcha')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">🍵 Ceramic Matcha Set</button>
-            <button onclick="loadPreset('candle')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">🕯️ Soy Ember Candle</button>
-            <button onclick="loadPreset('wallet')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">👛 Leather Cardholder</button>
+        <div>
+          <label class="field-label">Base Cost / Est. Price ($)</label>
+          <input id="f-price" type="number" step="0.5" min="0" placeholder="e.g. 18.00">
+        </div>
+        <div>
+          <label class="field-label">Target Marketplace</label>
+          <div class="platform-group">
+            <div class="platform-opt"><input type="radio" name="platform" id="p-etsy" value="Etsy" checked><label for="p-etsy">🧡 Etsy</label></div>
+            <div class="platform-opt"><input type="radio" name="platform" id="p-ebay" value="eBay"><label for="p-ebay">🏷️ eBay</label></div>
+            <div class="platform-opt"><input type="radio" name="platform" id="p-shopify" value="Shopify"><label for="p-shopify">🛍️ Shopify</label></div>
           </div>
         </div>
       </div>
-    </aside>
 
-    <!-- ── RIGHT: Results ─────────────────────────── -->
-    <section class="lg:col-span-7 space-y-5">
-
-      <!-- Empty state -->
-      <div id="empty-state" class="glass rounded-2xl p-12 text-center border border-dashed border-slate-800">
-        <div class="w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700 mx-auto flex items-center justify-center text-slate-500 mb-4">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-          </svg>
+      <!-- Row 2: Materials + Audience + Features -->
+      <div class="form-grid" style="margin-bottom:0;">
+        <div>
+          <label class="field-label">Materials / Craft Method</label>
+          <input id="f-materials" type="text" placeholder="e.g. Stoneware clay, food-safe glaze">
         </div>
-        <h3 class="text-base font-bold text-white">Your Optimised Listing Appears Here</h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Select a demo preset or fill in your product details, then click <em>Optimize with Gemma 4</em>.</p>
+        <div>
+          <label class="field-label">Target Buyer Persona</label>
+          <input id="f-audience" type="text" placeholder="e.g. Tea ceremony enthusiasts, mindful gifters">
+        </div>
+        <div>
+          <label class="field-label">Unique Features / Dimensions</label>
+          <input id="f-features" type="text" placeholder="e.g. 14oz, wheel-thrown, includes bamboo chasen whisk">
+        </div>
       </div>
 
-      <!-- Results container (hidden until first run) -->
-      <div id="results" class="hidden space-y-5">
-
-        <!-- ① Title + Tags card -->
-        <div class="glass rounded-2xl p-6 grad-border result-section">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
-            <div class="flex items-center gap-2">
-              <span id="r-platform-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wide">Etsy</span>
-              <span id="r-time" class="text-[11px] text-slate-500 font-mono"></span>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="saveCurrentListing()" id="save-btn"
-                class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                </svg>
-                <span id="save-label">Save to Atlas</span>
-              </button>
-              <button onclick="copyMarkdown()"
-                class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">Copy MD</button>
-            </div>
-          </div>
-
-          <!-- Title -->
-          <div class="mb-4">
-            <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-              <span class="font-semibold text-slate-300">Algorithmic SEO Title</span>
-              <span id="r-title-chars" class="font-mono text-[11px]">0 chars</span>
-            </div>
-            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-sm font-semibold text-emerald-300 leading-snug flex items-start justify-between gap-2">
-              <span id="r-title">—</span>
-              <button onclick="copyText(document.getElementById('r-title').textContent)" class="text-slate-500 hover:text-emerald-400 transition shrink-0" title="Copy">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- 13 Tags -->
-          <div>
-            <div class="flex items-center justify-between text-xs mb-2">
-              <span class="font-semibold text-slate-300">13 Search Algorithm Tags</span>
-              <button onclick="copyAllTags()" class="text-emerald-400 hover:underline text-[11px]">Copy all 13</button>
-            </div>
-            <div id="r-tags" class="flex flex-wrap gap-1.5"></div>
-          </div>
+      <!-- Presets -->
+      <div class="presets-row">
+        <span class="presets-label">Quick Presets:</span>
+        <div class="preset-chips">
+          <button type="button" class="preset-chip" onclick="loadPreset('matcha')">🍵 Ceramic Matcha Set</button>
+          <button type="button" class="preset-chip" onclick="loadPreset('candle')">🕯️ Soy Ember Candle</button>
+          <button type="button" class="preset-chip" onclick="loadPreset('wallet')">👛 Leather Cardholder</button>
         </div>
+      </div>
 
-        <!-- ② 3-Tier Pricing card -->
-        <div class="glass rounded-2xl p-6 result-section">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
-            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            3-Tier Psychological Pricing Matrix
-          </h3>
-          <div id="r-pricing" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
-        </div>
-
-        <!-- ③ Story + Bullets + Care card -->
-        <div class="glass rounded-2xl p-6 space-y-4 result-section">
-          <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
-              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-              </svg>
-              Artisan Origin Story
-            </h3>
-            <p id="r-story" class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 rounded-xl border border-slate-800 p-3.5"></p>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <h4 class="text-xs font-bold text-slate-300 mb-1.5">Key Specifications</h4>
-              <ul id="r-bullets" class="text-xs text-slate-400 space-y-1 list-disc list-inside"></ul>
-            </div>
-            <div>
-              <h4 class="text-xs font-bold text-slate-300 mb-1.5">Shipping & Care</h4>
-              <p id="r-care" class="text-xs text-slate-400 leading-relaxed"></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ④ ElevenLabs Audio Pitch card -->
-        <div class="glass rounded-2xl p-6 border border-amber-500/25 result-section">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
-              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-              </svg>
-              ElevenLabs 30-Second Audio Pitch
-            </h3>
-            <button onclick="generateAudio()" id="audio-btn"
-              class="text-xs px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5 shadow shadow-amber-500/20">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-              </svg>
-              <span id="audio-label">Generate Audio</span>
-            </button>
-          </div>
-          <p id="r-audio-script" class="text-xs italic text-slate-400 font-mono bg-slate-900/60 border border-slate-800 rounded-xl p-3 leading-relaxed"></p>
-          <audio id="audio-player" controls class="w-full mt-3 hidden rounded-lg h-9"></audio>
-        </div>
-
-        <!-- ⑤ Open Innovation Rationale card -->
-        <div class="glass rounded-2xl p-5 border border-emerald-500/25 bg-emerald-950/10 result-section">
-          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-            Why Open-Weight Gemma Protects Your Side-Hustle
-          </h4>
-          <p id="r-open-rationale" class="text-xs text-slate-300 leading-relaxed"></p>
-        </div>
-
-      </div><!-- /results -->
-    </section>
+      <button type="submit" class="btn-generate" id="gen-btn">
+        <svg id="gen-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span id="gen-label">Optimize Listing with Gemma 4</span>
+      </button>
+    </form>
   </div>
 
-  <!-- ─── SAVED CATALOG ────────────────────────────────── -->
-  <section id="catalog-section" class="mt-20 pt-10 border-t border-slate-800/60">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          📦 Your Product Catalog
-          <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-mono" id="catalog-storage-badge">MongoDB Atlas</span>
-        </h2>
-        <p class="text-xs text-slate-400 mt-1">Device-isolated · persists across sessions · no login required</p>
+  <!-- Empty State -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+    </div>
+    <h3>Your Optimised Listing Will Appear Here</h3>
+    <p>Fill in your product details above, or try one of the quick demo presets, then click <strong>Optimize with Gemma 4</strong>.</p>
+  </div>
+
+  <!-- Results Area -->
+  <div class="results-area" id="results-area">
+
+    <!-- Top bar -->
+    <div class="result-topbar">
+      <div class="result-topbar-left">
+        <div class="platform-tag" id="r-platform-badge">Etsy Optimised</div>
+        <div class="result-time" id="r-time"></div>
       </div>
-      <button onclick="loadCatalog()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <div class="result-actions">
+        <button class="btn-action" onclick="copyMarkdown()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          Copy All
+        </button>
+        <button class="btn-action btn-save" id="save-btn" onclick="saveCurrentListing()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span id="save-label">Save to Catalog</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Result cards grid -->
+    <div class="result-grid">
+
+      <!-- SEO Title -->
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+            </svg>
+            Optimised SEO Title
+          </div>
+        </div>
+        <div class="seo-title" id="r-title">—</div>
+        <div class="seo-title-meta">
+          <span class="char-count" id="r-title-chars">0 chars</span>
+          <button class="copy-btn" onclick="copyText(document.getElementById('r-title').textContent)">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Platform Categories
+          </div>
+        </div>
+        <div class="category-chips" id="r-categories"></div>
+      </div>
+
+      <!-- Tags — full width -->
+      <div class="result-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            13 Search Algorithm Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">(click any to copy)</span>
+          </div>
+          <button class="card-action" onclick="copyAllTags()">Copy All 13</button>
+        </div>
+        <div class="tags-wrap" id="r-tags"></div>
+      </div>
+
+      <!-- Pricing — full width -->
+      <div class="result-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            3-Tier Psychological Pricing Strategy
+          </div>
+        </div>
+        <div class="pricing-grid" id="r-pricing"></div>
+        <div class="pricing-meta" id="r-pricing-meta"></div>
+      </div>
+
+      <!-- Story -->
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            Artisan Origin Story
+          </div>
+        </div>
+        <div class="story-text" id="r-story"></div>
+      </div>
+
+      <!-- Specs + Care -->
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            Specifications & Care
+          </div>
+        </div>
+        <div class="specs-grid">
+          <div>
+            <div class="spec-sub-title">Key Specifications</div>
+            <ul class="spec-list" id="r-bullets"></ul>
+          </div>
+          <div>
+            <div class="spec-sub-title">Shipping & Care</div>
+            <p class="care-text" id="r-care"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Pitch -->
+      <div class="result-card audio-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+            </svg>
+            30-Second Audio Pitch (Social Media / Reels)
+          </div>
+        </div>
+        <div class="audio-script" id="r-audio-script"></div>
+        <button class="btn-audio" id="audio-btn" onclick="generateAudio()">
+          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+          </svg>
+          <span id="audio-label">Generate Voice</span>
+        </button>
+        <audio id="audio-player" controls class="hidden"></audio>
+      </div>
+
+      <!-- Open Innovation -->
+      <div class="result-card oi-card full-width">
+        <div class="card-header">
+          <div class="card-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Why Open-Weight AI Protects Your Business
+          </div>
+        </div>
+        <p class="oi-text" id="r-open-rationale"></p>
+      </div>
+
+    </div><!-- /result-grid -->
+  </div><!-- /results-area -->
+
+  <!-- ─── CATALOG ─── -->
+  <div class="catalog-section" id="catalog-section">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <h2>📦 Your Product Catalog</h2>
+        <p>Manage and access your optimized marketplace listings</p>
+      </div>
+      <button class="btn-refresh" onclick="loadCatalog()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
         Refresh
       </button>
     </div>
-    <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="col-span-full py-12 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">
-        No saved listings yet. Generate and save one above!
-      </div>
+    <div class="catalog-grid" id="catalog-grid">
+      <div class="catalog-empty">No saved listings yet. Generate and save one above!</div>
     </div>
-  </section>
-</main>
+  </div>
 
-<footer class="border-t border-slate-800/50 py-8 text-center text-[11px] text-slate-500">
-  CraftOptima · Hacktoberfest 2026 Week 2 · Side Hustle · MIT License ·
-  Powered by Google Gemma 4, Render, MongoDB Atlas & ElevenLabs
-</footer>
+</div><!-- /workspace -->
 
-<!-- ─── APPLICATION LOGIC ─────────────────────────────── -->
+<footer>© 2026 CraftOptima. All rights reserved.</footer>
+
 <script>
-  // ── Config ──────────────────────────────────────────
-  const API =
-    (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? 'http://localhost:8000'
-      : '';          // same origin when deployed on Render + static host
+  // ── Config ───────────────────────────────────────
+  const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000' : '';
 
-  // Anonymous device ID for multi-tenant catalog isolation
   let userId = localStorage.getItem('co_uid');
   if (!userId) {
-    userId = 'seller_' + crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+    userId = 'seller_' + crypto.randomUUID().replace(/-/g,'').slice(0,12);
     localStorage.setItem('co_uid', userId);
   }
 
-  // Demo presets
+  // ── Theme ────────────────────────────────────────
+  const savedTheme = localStorage.getItem('co_theme') || 'light';
+  applyTheme(savedTheme);
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('co_theme', theme);
+  }
+  function toggleTheme() {
+    const curr = document.documentElement.getAttribute('data-theme');
+    applyTheme(curr === 'dark' ? 'light' : 'dark');
+  }
+
+  // ── Presets ──────────────────────────────────────
   const PRESETS = {
-    matcha: {
-      platform: 'Etsy',
-      name: 'Handmade Speckled Ceramic Matcha Bowl with 100-Prong Bamboo Chasen Whisk',
-      materials: 'Stoneware clay, food-safe cream satin glaze, natural bamboo',
-      price: '22',
-      audience: 'Tea ceremony practitioners, mindful morning ritualists, zen home decor lovers',
-      features: 'Wheel-thrown individually; contoured thumb rest; 14 oz capacity; microwave & dishwasher safe; authentic 100-prong bamboo whisk included.'
-    },
-    candle: {
-      platform: 'Etsy',
-      name: 'Wood Smoke & Amber Hand-Poured Botanical Soy Candle',
-      materials: '100% natural soy wax, crackling wooden wick, phthalate-free fragrance blend',
-      price: '11',
-      audience: 'Cozy-autumn lovers, bookish home decor shoppers, slow-living enthusiasts',
-      features: '8 oz amber glass jar with brass lid; 50-hour clean burn; scent notes of smoked birch, warm amber, dried cedarwood.'
-    },
-    wallet: {
-      platform: 'Shopify',
-      name: 'Minimalist Full-Grain Vegetable-Tanned Leather Card Wallet',
-      materials: '3.5 oz Italian vegetable-tanned leather, waxed polyester thread (saddle stitch)',
-      price: '15',
-      audience: 'EDC minimalists, craftsmanship purists, groomsmen gift shoppers',
-      features: 'Hand-stitched saddle stitch (won\'t unravel if a thread breaks); 3 card slots + folded cash pocket; deepens to rich patina over years of use; 7 × 10 cm.'
-    }
+    matcha: { platform:'Etsy', name:'Handmade Speckled Ceramic Matcha Bowl with 100-Prong Bamboo Chasen Whisk', materials:'Stoneware clay, food-safe cream satin glaze, natural bamboo', price:'22', audience:'Tea ceremony practitioners, mindful morning ritualists, zen decor lovers', features:'Wheel-thrown individually; contoured thumb rest; 14 oz capacity; microwave & dishwasher safe.' },
+    candle: { platform:'Etsy', name:'Wood Smoke & Amber Hand-Poured Botanical Soy Candle', materials:'100% natural soy wax, crackling wooden wick, phthalate-free fragrance', price:'11', audience:'Cozy-autumn lovers, bookish shoppers, slow-living enthusiasts', features:'8 oz amber glass jar with brass lid; 50-hour clean burn; notes of smoked birch, warm amber, cedarwood.' },
+    wallet: { platform:'Shopify', name:'Minimalist Full-Grain Vegetable-Tanned Leather Card Wallet', materials:'3.5 oz Italian vegetable-tanned leather, waxed polyester thread', price:'15', audience:'EDC minimalists, craftsmanship purists, groomsmen gift shoppers', features:"Hand-stitched saddle stitch; 3 card slots + cash pocket; 7×10 cm; develops rich patina over years." }
   };
 
-  // Hold last generated data
-  let lastData = null;
-  let lastPlatform = 'Etsy';
-
-  // ── Preset loader ────────────────────────────────────
   function loadPreset(key) {
-    const p = PRESETS[key];
+    const p = PRESETS[key]; if (!p) return;
     document.getElementById('f-name').value = p.name;
     document.getElementById('f-materials').value = p.materials;
     document.getElementById('f-price').value = p.price;
@@ -437,286 +867,226 @@
     document.querySelector(`input[name="platform"][value="${p.platform}"]`).checked = true;
   }
 
-  // ── Main: call backend ───────────────────────────────
+  // ── Shared state ─────────────────────────────────
+  let lastData = null, lastPlatform = 'Etsy';
+
+  // ── Run optimize ─────────────────────────────────
   async function runOptimize() {
     const btn   = document.getElementById('gen-btn');
     const label = document.getElementById('gen-label');
     const icon  = document.getElementById('gen-icon');
-
     const platform = document.querySelector('input[name="platform"]:checked')?.value || 'Etsy';
-    const name     = document.getElementById('f-name').value.trim();
+    const name = document.getElementById('f-name').value.trim();
     if (!name) return;
 
     btn.disabled = true;
-    label.textContent = 'Generating…';
-    icon.classList.add('spin-slow');
+    label.textContent = 'Analysing with Gemma 4…';
+    icon.classList.add('spinner');
 
     const t0 = Date.now();
     try {
       const res = await fetch(`${API}/api/generate-listing`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           product_name: name,
-          materials: document.getElementById('f-materials').value.trim() || null,
+          materials: document.getElementById('f-materials').value.trim()||null,
           target_platform: platform,
-          target_audience: document.getElementById('f-audience').value.trim() || null,
-          key_features: document.getElementById('f-features').value.trim() || null,
-          current_price_estimate: parseFloat(document.getElementById('f-price').value) || null,
+          target_audience: document.getElementById('f-audience').value.trim()||null,
+          key_features: document.getElementById('f-features').value.trim()||null,
+          current_price_estimate: parseFloat(document.getElementById('f-price').value)||null,
           user_id: userId
         })
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail || res.statusText);
-      }
-
+      if (!res.ok) { const e = await res.json().catch(()=>({detail:res.statusText})); throw new Error(e.detail||res.statusText); }
       const data = await res.json();
-      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-      lastData = data;
-      lastPlatform = platform;
+      const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+      lastData = data; lastPlatform = platform;
       renderResults(data, platform, elapsed);
-
-    } catch (e) {
-      alert('❌ Generation failed:\n' + e.message +
-        '\n\nMake sure the backend is running and GEMINI_API_KEY is set.');
+    } catch(e) {
+      alert('Generation failed:\n' + e.message);
     } finally {
       btn.disabled = false;
-      label.textContent = 'Optimize with Gemma 4';
-      icon.classList.remove('spin-slow');
+      label.textContent = 'Optimize Listing with Gemma 4';
+      icon.classList.remove('spinner');
     }
   }
 
-  // ── Render results ───────────────────────────────────
+  // ── Render ───────────────────────────────────────
   function renderResults(data, platform, elapsed) {
-    document.getElementById('empty-state').classList.add('hidden');
-    const r = document.getElementById('results');
-    r.classList.remove('hidden');
+    document.getElementById('empty-state').style.display = 'none';
+    const ra = document.getElementById('results-area');
+    ra.style.display = 'block';
 
-    // Badge + timing
     document.getElementById('r-platform-badge').textContent = platform + ' Optimised';
     document.getElementById('r-time').textContent = `Generated in ${elapsed}s`;
 
     // Title
     const title = data.optimized_title || '';
     document.getElementById('r-title').textContent = title;
-    document.getElementById('r-title-chars').textContent = `${title.length} chars`;
+    document.getElementById('r-title-chars').textContent = title.length + ' chars';
+
+    // Categories
+    const catEl = document.getElementById('r-categories');
+    catEl.innerHTML = '';
+    (data.suggested_categories||[]).forEach(c => {
+      const s = document.createElement('span'); s.className='category-chip'; s.textContent=c; catEl.appendChild(s);
+    });
 
     // Tags
-    const tagsEl = document.getElementById('r-tags');
-    tagsEl.innerHTML = '';
-    (data.seo_tags || []).forEach(tag => {
-      const clean = tag.replace(/^#/, '');
-      const btn = document.createElement('button');
-      btn.className = 'tag-chip text-xs px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 text-slate-300 font-mono transition';
-      btn.textContent = '#' + clean;
-      btn.title = 'Click to copy';
+    const tagsEl = document.getElementById('r-tags'); tagsEl.innerHTML='';
+    (data.seo_tags||[]).forEach(tag => {
+      const clean = tag.replace(/^#/,'');
+      const btn = document.createElement('button'); btn.className='tag-chip';
+      btn.textContent = '#'+clean; btn.title='Click to copy';
       btn.onclick = () => {
         navigator.clipboard.writeText(clean);
-        const orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        btn.classList.add('text-emerald-400', 'border-emerald-500');
-        setTimeout(() => { btn.textContent = orig; btn.classList.remove('text-emerald-400', 'border-emerald-500'); }, 1300);
+        const orig = btn.textContent; btn.textContent='✓ Copied!';
+        setTimeout(()=>btn.textContent=orig, 1300);
       };
       tagsEl.appendChild(btn);
     });
 
-    // Pricing tiers
-    const pricingEl = document.getElementById('r-pricing');
-    pricingEl.innerHTML = '';
+    // Pricing
+    const pEl = document.getElementById('r-pricing'); pEl.innerHTML='';
     const tiers = data.pricing_strategy?.pricing_tiers || [];
-    const tierColors = ['text-sky-400', 'text-amber-400', 'text-purple-400'];
-    tiers.forEach((tier, i) => {
-      const card = document.createElement('div');
-      card.className = 'p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col gap-1';
-      card.innerHTML = `
-        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${tier.tier_name}</div>
-        <div class="text-[2rem] font-black ${tierColors[i] || 'text-slate-200'} leading-none">$${Number(tier.price).toFixed(2)}</div>
-        <p class="text-[11px] text-slate-400 leading-snug mt-1">${tier.rationale}</p>`;
-      pricingEl.appendChild(card);
+    const priceClasses = ['fast','sweet','premium'];
+    const tierEmojis = ['🚀','⭐','👑'];
+    tiers.forEach((tier,i) => {
+      const d = document.createElement('div'); d.className='price-tier';
+      d.innerHTML=`<div class="price-tier-name">${tierEmojis[i]||''} ${tier.tier_name}</div>
+        <div class="price-value ${priceClasses[i]||''}">$${Number(tier.price).toFixed(2)}</div>
+        <div class="price-rationale">${tier.rationale}</div>`;
+      pEl.appendChild(d);
     });
+    const pmEl = document.getElementById('r-pricing-meta'); pmEl.innerHTML='';
+    const ps = data.pricing_strategy;
+    if (ps) {
+      [['Recommended Retail', `$${ps.recommended_retail}`], ['Target Margin', ps.profit_margin_target], ['Currency', ps.currency]].forEach(([k,v]) => {
+        const d = document.createElement('div'); d.className='pricing-meta-item';
+        d.innerHTML=`${k}: <strong>${v}</strong>`; pmEl.appendChild(d);
+      });
+    }
 
     // Story
-    document.getElementById('r-story').textContent = data.compelling_story || '';
+    document.getElementById('r-story').textContent = data.compelling_story||'';
 
     // Bullets
-    const bulletsEl = document.getElementById('r-bullets');
-    bulletsEl.innerHTML = '';
-    (data.bullet_features || []).forEach(b => {
-      const li = document.createElement('li'); li.textContent = b; bulletsEl.appendChild(li);
-    });
+    const bEl = document.getElementById('r-bullets'); bEl.innerHTML='';
+    (data.bullet_features||[]).forEach(b => { const li=document.createElement('li'); li.textContent=b; bEl.appendChild(li); });
 
     // Care
-    document.getElementById('r-care').textContent = data.shipping_and_care_tips || '';
+    document.getElementById('r-care').textContent = data.shipping_and_care_tips||'';
 
-    // Audio script
-    document.getElementById('r-audio-script').textContent = `"${data.audio_pitch_script || ''}"`;
+    // Audio
+    document.getElementById('r-audio-script').textContent = `"${data.audio_pitch_script||''}"`;
     document.getElementById('audio-player').classList.add('hidden');
-    document.getElementById('audio-label').textContent = 'Generate Audio';
+    document.getElementById('audio-label').textContent = 'Generate Voice';
 
-    // Open innovation
-    document.getElementById('r-open-rationale').textContent = data.open_innovation_rationale || '';
+    // OI
+    document.getElementById('r-open-rationale').textContent = data.open_innovation_rationale||'';
 
-    r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    ra.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 
-  // ── ElevenLabs audio ─────────────────────────────────
+  // ── Audio ────────────────────────────────────────
   async function generateAudio() {
     if (!lastData?.audio_pitch_script) return;
-    const btn   = document.getElementById('audio-btn');
-    const label = document.getElementById('audio-label');
-    const player = document.getElementById('audio-player');
-
-    btn.disabled = true;
-    label.textContent = 'Synthesising…';
-
+    const btn=document.getElementById('audio-btn'), label=document.getElementById('audio-label'), player=document.getElementById('audio-player');
+    btn.disabled=true; label.textContent='Synthesising…';
     try {
       const res = await fetch(`${API}/api/audio-pitch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: lastData.audio_pitch_script })
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({text: lastData.audio_pitch_script})
       });
-
       if (!res.ok) throw new Error(`ElevenLabs error ${res.status}`);
-
       const blob = await res.blob();
       player.src = URL.createObjectURL(blob);
-      player.classList.remove('hidden');
-      player.play();
+      player.classList.remove('hidden'); player.play();
       label.textContent = 'Play Again';
-    } catch (e) {
-      alert('Voice synthesis failed:\n' + e.message +
-        '\n\nCheck that ELEVENLABS_API_KEY is configured on the backend.');
-      label.textContent = 'Generate Audio';
-    } finally {
-      btn.disabled = false;
-    }
+    } catch(e) {
+      alert('Voice synthesis failed:\n'+e.message);
+      label.textContent = 'Generate Voice';
+    } finally { btn.disabled=false; }
   }
 
-  // ── Save to Atlas ────────────────────────────────────
+  // ── Save ─────────────────────────────────────────
   async function saveCurrentListing() {
     if (!lastData) return;
-    const btn   = document.getElementById('save-btn');
-    const label = document.getElementById('save-label');
-
-    btn.disabled = true;
-    label.textContent = 'Saving…';
-
+    const btn=document.getElementById('save-btn'), label=document.getElementById('save-label');
+    btn.disabled=true; label.textContent='Saving…';
     try {
       const res = await fetch(`${API}/api/listings/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          product_name: document.getElementById('f-name').value.trim(),
-          platform: lastPlatform,
-          data: lastData
-        })
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id:userId, product_name:document.getElementById('f-name').value.trim(), platform:lastPlatform, data:lastData})
       });
       const resp = await res.json();
-      label.textContent = resp.storage === 'mongodb_atlas' ? '✓ Saved to Atlas!' : '✓ Saved Locally!';
+      label.textContent = '✓ Saved!';
       loadCatalog();
-      setTimeout(() => { label.textContent = 'Save to Atlas'; btn.disabled = false; }, 2000);
-    } catch (e) {
-      alert('Save failed: ' + e.message);
-      label.textContent = 'Save to Atlas';
-      btn.disabled = false;
+      setTimeout(()=>{label.textContent='Save to Catalog'; btn.disabled=false;}, 2000);
+    } catch(e) {
+      alert('Save failed: '+e.message);
+      label.textContent='Save to Catalog'; btn.disabled=false;
     }
   }
 
-  // ── Catalog ──────────────────────────────────────────
+  // ── Catalog ──────────────────────────────────────
   async function loadCatalog() {
     try {
       const res  = await fetch(`${API}/api/listings?user_id=${encodeURIComponent(userId)}`);
       const data = await res.json();
-      const items = data.listings || [];
-
+      const items = data.listings||[];
       document.getElementById('nav-count').textContent = items.length;
-      document.getElementById('catalog-storage-badge').textContent =
-        data.storage === 'mongodb_atlas' ? 'MongoDB Atlas' : 'Local Memory';
-
       const grid = document.getElementById('catalog-grid');
-      if (items.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-12 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">No saved listings yet. Generate and save one above!</div>`;
-        return;
-      }
-
-      grid.innerHTML = '';
+      if (!items.length) { grid.innerHTML='<div class="catalog-empty">No saved listings yet. Generate and save one above!</div>'; return; }
+      grid.innerHTML='';
       items.forEach(item => {
-        const rec  = item.data?.pricing_strategy?.pricing_tiers?.[1]?.price;
-        const card = document.createElement('div');
-        card.className = 'glass rounded-xl p-4 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between gap-3';
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between text-[10px] mb-1.5">
-              <span class="font-mono font-bold text-emerald-400 uppercase">${item.platform}</span>
-              <span class="text-slate-500">${new Date(item.created_at).toLocaleDateString()}</span>
-            </div>
-            <h4 class="text-sm font-bold text-white leading-snug line-clamp-2">${item.product_name}</h4>
-            <p class="text-[11px] text-slate-400 mt-1 line-clamp-1">${item.data?.optimized_title || ''}</p>
+        const rec = item.data?.pricing_strategy?.pricing_tiers?.[1]?.price;
+        const card = document.createElement('div'); card.className='catalog-card';
+        card.innerHTML=`
+          <div class="catalog-card-header">
+            <span class="catalog-platform">${item.platform}</span>
+            <span class="catalog-date">${new Date(item.created_at).toLocaleDateString()}</span>
           </div>
-          <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-            <span class="text-base font-black text-amber-400">${rec != null ? '$' + Number(rec).toFixed(2) : '—'}</span>
-            <button class="text-xs text-emerald-400 hover:underline" onclick="loadSaved(this)">View →</button>
+          <div class="catalog-name">${item.product_name}</div>
+          <div class="catalog-preview-title">${item.data?.optimized_title||''}</div>
+          <div class="catalog-card-footer">
+            <span class="catalog-price">${rec!=null?'$'+Number(rec).toFixed(2):'—'}</span>
+            <button class="btn-view">View →</button>
           </div>`;
-        card.querySelector('button').dataset.payload = JSON.stringify(item);
+        card.querySelector('.btn-view').onclick = () => {
+          lastData=item.data; lastPlatform=item.platform;
+          renderResults(item.data,item.platform,'—');
+          window.scrollTo({top:0,behavior:'smooth'});
+        };
         grid.appendChild(card);
       });
-    } catch (e) {
-      console.warn('Catalog load failed:', e);
-    }
+    } catch(e) { console.warn('Catalog load failed:',e); }
   }
 
-  function loadSaved(btn) {
-    const item = JSON.parse(btn.dataset.payload);
-    lastData = item.data;
-    lastPlatform = item.platform;
-    renderResults(item.data, item.platform, '—');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  function scrollToCatalog() { document.getElementById('catalog-section').scrollIntoView({behavior:'smooth'}); }
 
-  function scrollToCatalog() {
-    document.getElementById('catalog-section').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  // ── Clipboard helpers ────────────────────────────────
   function copyText(txt) {
     navigator.clipboard.writeText(txt);
   }
-
   function copyAllTags() {
     if (!lastData?.seo_tags) return;
-    const tags = lastData.seo_tags.join(', ');
-    navigator.clipboard.writeText(tags);
-    alert('Copied 13 tags:\n' + tags);
+    const t = lastData.seo_tags.join(', ');
+    navigator.clipboard.writeText(t);
+    alert('Copied 13 tags:\n'+t);
   }
-
   function copyMarkdown() {
     if (!lastData) return;
-    const d = lastData;
-    const md = [
-      `# ${d.optimized_title}`,
-      '',
-      `**Tags:** ${d.seo_tags.join(', ')}`,
-      '',
-      '## Artisan Story',
-      d.compelling_story,
-      '',
-      '## Pricing',
-      ...d.pricing_strategy.pricing_tiers.map(t => `- **${t.tier_name}:** $${t.price} — ${t.rationale}`),
-      '',
-      '## Specifications',
-      ...d.bullet_features.map(b => `- ${b}`),
-      '',
-      '## Care & Shipping',
-      d.shipping_and_care_tips
-    ].join('\n');
+    const d=lastData;
+    const md=[`# ${d.optimized_title}`,''
+      ,`**Tags:** ${d.seo_tags.join(', ')}`,''
+      ,'## Artisan Story', d.compelling_story,''
+      ,'## Pricing',...d.pricing_strategy.pricing_tiers.map(t=>`- **${t.tier_name}:** $${t.price} — ${t.rationale}`),''
+      ,'## Specifications',...d.bullet_features.map(b=>`- ${b}`),''
+      ,'## Care & Shipping',d.shipping_and_care_tips].join('\n');
     navigator.clipboard.writeText(md);
-    alert('Markdown copied to clipboard!');
+    alert('Markdown copied!');
   }
 
-  // ── Init ─────────────────────────────────────────────
   loadCatalog();
 </script>
 </body>

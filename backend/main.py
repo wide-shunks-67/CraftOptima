@@ -192,7 +192,7 @@ class ListingResponse(BaseModel):
 class AudioPitchRequest(BaseModel):
     text: str = Field(..., description="Script text to synthesise")
     voice_id: str = Field(
-        default_factory=lambda: os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+        default_factory=lambda: os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
     )
 
 
@@ -270,11 +270,15 @@ Generate the complete JSON response now.
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.7,
-                max_output_tokens=2048,
+                max_output_tokens=4096,
             ),
         )
         cleaned = _clean_json(response.text)
-        parsed = json.loads(cleaned)
+        try:
+            parsed = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # Fallback for unescaped newlines/control characters inside JSON strings
+            parsed = json.loads(cleaned, strict=False)
 
         # Enforce tag count – trim or pad so Pydantic doesn't reject
         tags = parsed.get("seo_tags", [])
