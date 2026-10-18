@@ -60,10 +60,11 @@ Helps creators maximize revenue and eliminate underpricing with three calculated
 - Each seller has their own private catalog isolated to their workspace/device — other users never see your saved products or pricing strategies.
 - Manage products effortlessly with instant one-click deletion and instant listing reloading.
 
-### 8. 🎨 Purpose-Built Clean Interface
+### 8. 🎨 Purpose-Built Clean & Mobile-Optimized Interface
 - Modern, light-blue aesthetic with an instant Dark Mode toggle.
-- Compact 2-row input form so creators spend less time filling forms and more time making products.
-- One-click presets (Ceramic Matcha Bowl, Soy Candle, Leather Wallet) for instant testing.
+- **Full Mobile Responsiveness:** Dynamically adapts on smartphones and tablets with stacked single-column form inputs, touch-friendly platform buttons, and full-width card layouts.
+- **Silent Server Warmup:** Automatically pre-warms the backend API in the background on page load so generation starts immediately when clicked.
+- **Compact & Intuitive:** 2-row desktop input form with one-click presets (Ceramic Matcha Bowl, Soy Candle, Leather Wallet) for instant testing.
 
 ---
 
@@ -74,7 +75,7 @@ Helps creators maximize revenue and eliminate underpricing with three calculated
 | **Trade Secret Protection** | Blueprints & unique glaze formulas sent to corporate servers | Private inference; zero proprietary craft techniques exposed |
 | **Creator Economics** | \$20–\$50/month subscriptions drain tight artisan margins | Predictable, lightweight hosting with open weights |
 | **Vendor Independence** | Sudden price increases or sudden API deprecations | Open weights cannot be revoked, shut down, or price-hiked |
-| **Consistent Structure** | Prone to conversational drift and markdown parsing breaks | Strict JSON schema guarantees flawless marketplace fields |
+| **Strict JSON Compliance** | Prone to conversational drift, malformed quotes, and markdown fence breaks | Constrained schema decoding (`response_schema=ListingResponse`) guarantees 100% valid, typed marketplace outputs |
 
 ---
 
