@@ -503,6 +503,14 @@
     .catalog-price { font-size: 18px; font-weight: 900; color: var(--accent); }
     .btn-view { font-size: 12px; color: var(--accent); font-weight: 600; background: none; border: none; cursor: pointer; }
     .btn-view:hover { text-decoration: underline; }
+    .btn-delete-card {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent;
+      background: none; color: var(--text-muted); cursor: pointer; transition: all .18s; flex-shrink: 0;
+    }
+    .btn-delete-card:hover { background: #fee2e2; border-color: #fca5a5; color: var(--red); }
+    [data-theme="dark"] .btn-delete-card:hover { background: #3f0f0f; border-color: #7f1d1d; }
+    .btn-delete-card svg { width: 13px; height: 13px; pointer-events: none; }
 
     /* ─── FOOTER ─── */
     footer {
@@ -1041,11 +1049,20 @@
       grid.innerHTML='';
       items.forEach(item => {
         const rec = item.data?.pricing_strategy?.pricing_tiers?.[1]?.price;
-        const card = document.createElement('div'); card.className='catalog-card';
+        const card = document.createElement('div');
+        card.className='catalog-card';
+        card.dataset.listingId = item.id;
         card.innerHTML=`
           <div class="catalog-card-header">
             <span class="catalog-platform">${item.platform}</span>
-            <span class="catalog-date">${new Date(item.created_at).toLocaleDateString()}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="catalog-date">${new Date(item.created_at).toLocaleDateString()}</span>
+              <button class="btn-delete-card" title="Delete listing" onclick="deleteListing('${item.id}', this)">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="catalog-name">${item.product_name}</div>
           <div class="catalog-preview-title">${item.data?.optimized_title||''}</div>
@@ -1061,6 +1078,32 @@
         grid.appendChild(card);
       });
     } catch(e) { console.warn('Catalog load failed:',e); }
+  }
+
+  async function deleteListing(listingId, btn) {
+    if (!confirm('Delete this listing from your catalog? This cannot be undone.')) return;
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    try {
+      const res = await fetch(
+        `${API}/api/listings/${encodeURIComponent(listingId)}?user_id=${encodeURIComponent(userId)}`,
+        { method: 'DELETE' }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({detail: res.statusText}));
+        throw new Error(err.detail || res.statusText);
+      }
+      // Optimistically remove the card from the DOM
+      const card = btn.closest('.catalog-card');
+      card.style.transition = 'opacity .25s, transform .25s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(.97)';
+      setTimeout(() => { card.remove(); loadCatalog(); }, 260);
+    } catch(e) {
+      alert('Delete failed: ' + e.message);
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
   }
 
   function scrollToCatalog() { document.getElementById('catalog-section').scrollIntoView({behavior:'smooth'}); }

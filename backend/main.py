@@ -386,3 +386,47 @@ async def list_listings(user_id: str = Query("anon-seller")) -> Dict[str, Any]:
 
     items = [d for d in _in_memory_catalog if d.get("user_id") == user_id]
     return {"listings": list(reversed(items)), "storage": "in_memory"}
+
+
+@app.delete("/api/listings/{listing_id}", tags=["Catalog"])
+async def delete_listing(listing_id: str, user_id: str = Query(...)) -> Dict[str, Any]:
+    """
+    Deletes a single listing by ID — ONLY if it belongs to the requesting user_id.
+    The user_id ownership check ensures no user can delete another user's data.
+    """
+    if catalog_collection is not None:
+        try:
+            from bson import ObjectId
+            from bson.errors import InvalidId
+
+            try:
+                oid = ObjectId(listing_id)
+            except InvalidId:
+                raise HTTPException(status_code=400, detail="Invalid listing ID format.")
+
+            result = await catalog_collection.delete_one(
+                {"_id": oid, "user_id": user_id}  # ownership guard
+            )
+            if result.deleted_count == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Listing not found or you do not have permission to delete it.",
+                )
+            return {"status": "deleted", "id": listing_id, "storage": "mongodb_atlas"}
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning("MongoDB delete failed, trying memory fallback: %s", exc)
+
+    # In-memory fallback — match by position index and user_id
+    global _in_memory_catalog
+    original_len = len(_in_memory_catalog)
+    try:
+        idx = int(listing_id)
+        if 0 <= idx < original_len and _in_memory_catalog[idx].get("user_id") == user_id:
+            _in_memory_catalog.pop(idx)
+        else:
+            raise HTTPException(status_code=404, detail="Listing not found.")
+    except (ValueError, IndexError):
+        raise HTTPException(status_code=404, detail="Listing not found.")
+    return {"status": "deleted", "id": listing_id, "storage": "in_memory"}
